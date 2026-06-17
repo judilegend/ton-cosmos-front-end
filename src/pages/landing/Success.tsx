@@ -1,0 +1,265 @@
+import { motion, AnimatePresence } from 'framer-motion';
+import Footer from '@/components/landing/Footer';
+import HeaderSection from '@/components/landing/Header';
+import { useSearchParams } from 'react-router-dom';
+import { OrnamentDivider } from '@/components/icons';
+import { useEffect, useState } from 'react';
+import {
+    CheckCircle2,
+    FileText,
+    Loader2,
+    Mail,
+    Send,
+    Sparkles,
+    type LucideIcon,
+} from 'lucide-react';
+import { WEB_SOCKET_BASE } from '@/hooks/UseApi';
+import ScrollToTop from '@/components/ScrollToTop';
+
+const navLinks = [
+    { label: 'Accueil', href: '#hero' },
+    { label: 'Contenu', href: '#contenu' },
+    { label: 'Processus', href: '#processus' },
+    { label: 'Commander', href: '#commander' },
+];
+
+function StepItem({
+    icon: Icon,
+    title,
+    description,
+    status,
+}: {
+    icon: LucideIcon;
+    title: string;
+    description: string;
+    status: 'wait' | 'loading' | 'done';
+}) {
+    const isDone = status === 'done';
+    const isLoading = status === 'loading';
+    const isWait = status === 'wait';
+
+    return (
+        <div
+            className={`
+                flex items-start gap-4 p-3 rounded-xl transition-all duration-500 border
+                ${isLoading ? 'bg-white/5 border-white/10 shadow-lg' : 'border-transparent'}
+                ${isWait ? 'opacity-40 grayscale' : 'opacity-100'}
+            `}
+        >
+            <div className="relative">
+                <div
+                    className={`
+                        p-2.5 mt-2 rounded-lg transition-colors duration-500
+                        ${isDone ? 'bg-[#d4b96a]/10 text-[#d4b96a]' : 'bg-zinc-800 text-zinc-500'}
+                        ${isLoading ? 'ring-2 ring-[#d4b96a]/50 text-[#d4b96a]' : ''}
+                    `}
+                >
+                    <Icon className={`w-5 h-5 ${isLoading ? 'animate-pulse' : ''}`} />
+                </div>
+
+                {isLoading && (
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#d4b96a] opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-[#d4b96a]"></span>
+                    </span>
+                )}
+            </div>
+
+            <div className="flex-1 pt-0.5">
+                <h5
+                    className={`
+                    text-base text-start font-medium transition-colors duration-500
+                    ${isDone ? 'text-zinc-500' : 'text-zinc-100'}
+                `}
+                >
+                    {title}
+                </h5>
+                <p
+                    className={`
+                    text-sm text-start transition-colors duration-500 mt-0.5
+                    ${isDone ? 'text-zinc-600' : 'text-zinc-400'}
+                `}
+                >
+                    {description}
+                </p>
+            </div>
+
+            <div className="pt-1">
+                {isLoading && <Loader2 className="w-5 h-5 animate-spin text-[#d4b96a]" />}
+                {isDone && (
+                    <div className="bg-[#d4b96a]/20 p-1 rounded-full">
+                        <CheckCircle2 className="w-4 h-4 text-[#d4b96a]" />
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+export default function PayementSuccessPage() {
+    const [searchParams] = useSearchParams();
+    // const session_id = searchParams.get('session_id') as string;
+    const order_id = searchParams.get('order_id') as string;
+
+    const [step, setStep] = useState<number>(() => {
+        const savedStep = localStorage.getItem('currentStep');
+        return savedStep ? parseInt(savedStep, 10) : 1;
+    });
+
+    const [isFinished, setIsFinished] = useState<boolean>(() => {
+        const savedStep = localStorage.getItem('currentStep');
+        return savedStep === '5';
+    });
+
+    useEffect(() => {
+        sessionStorage.clear();
+        localStorage.removeItem('currentStep');
+
+        if (!order_id) return;
+
+        const session_id = `ton-cosmos-${order_id}`;
+        const socket = new WebSocket(`${WEB_SOCKET_BASE}/stripe/ws/${session_id}`);
+
+        socket.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+
+                if (data.status && data.step) {
+                    const newStep = data.step;
+
+                    setStep(newStep);
+
+                    localStorage.setItem('currentStep', newStep.toString());
+
+                    if (newStep === 5) {
+                        setIsFinished(true);
+                        localStorage.removeItem('currentStep');
+                    }
+                }
+            } catch (error) {
+                console.error('Erreur lors de la lecture du message socket', error);
+            }
+        };
+
+        return () => {
+            socket.close();
+        };
+    }, [order_id]);
+
+    return (
+        <main className="relative min-h-screen bg-[#09090b] text-[#fafafa] overflow-x-hidden">
+            <ScrollToTop />
+            <HeaderSection navLinks={navLinks} />
+
+            <div className="max-w-2xl w-full pt-30 sm:pt-32 md:pt-40 pb-16 sm:pb-25 mx-auto px-4 sm:px-6">
+                <AnimatePresence mode="wait">
+                    {!isFinished ? (
+                        <motion.div
+                            key="processing"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 1.05 }}
+                            className="text-center"
+                        >
+                            <span className="text-[10px] sm:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] text-[#d4b96a] font-medium">
+                                Merci pour votre confiance
+                            </span>
+
+                            <h2 className="font-display text-3xl sm:text-5xl md:text-6xl font-light text-[#fafafa] mt-4 sm:mt-6 mb-6 sm:mb-8 uppercase tracking-tight leading-tight">
+                                Création de votre
+                                <br />
+                                <span className="italic">Portrait Astral</span>
+                            </h2>
+
+                            <OrnamentDivider className="mx-auto mb-8 sm:mb-12 w-32 sm:w-auto" />
+
+                            <div className="rounded-2xl border border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.015)] p-5 sm:p-8 backdrop-blur-sm relative overflow-hidden">
+                                <div className="space-y-6 sm:space-y-8">
+                                    <StepItem
+                                        icon={FileText}
+                                        title="Lecture Astrale"
+                                        description="Alignement des astres au moment de votre naissance"
+                                        status={step === 1 ? 'loading' : step > 1 ? 'done' : 'wait'}
+                                    />
+                                    <StepItem
+                                        icon={Sparkles}
+                                        title="Interprétation Cosmique"
+                                        description="Analyse des influences planétaires sur votre profil"
+                                        status={step === 2 ? 'loading' : step > 2 ? 'done' : 'wait'}
+                                    />
+                                    <StepItem
+                                        icon={Sparkles}
+                                        title="Rédaction de votre Guide"
+                                        description="Mise en page de vos révélations personnalisées"
+                                        status={step === 3 ? 'loading' : step > 3 ? 'done' : 'wait'}
+                                    />
+                                    <StepItem
+                                        icon={Send}
+                                        title="Envoi de votre Destin"
+                                        description="Votre rapport complet arrive dans votre boîte mail"
+                                        status={step === 4 ? 'loading' : step > 4 ? 'done' : 'wait'}
+                                    />
+                                </div>
+                            </div>
+
+                            <p className="mt-8 sm:mt-10 text-[#a1a1aa] text-xs sm:text-sm italic px-4">
+                                Cette opération peut prendre quelque minutes.{' '}
+                                <br className="hidden sm:block" />
+                                Ne fermez pas cette page pour garantir la livraison.
+                            </p>
+                        </motion.div>
+                    ) : (
+                        <motion.div
+                            key="success"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-center"
+                        >
+                            <div className="mb-6 sm:mb-8 flex justify-center">
+                                <div className="relative">
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        className="bg-[#d4b96a] p-3 sm:p-4 rounded-full"
+                                    >
+                                        <CheckCircle2 className="w-8 h-8 sm:w-12 sm:h-12 text-[#09090b]" />
+                                    </motion.div>
+                                    <motion.div
+                                        animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                                        transition={{ repeat: Infinity, duration: 2 }}
+                                        className="absolute inset-0 border-2 border-[#d4b96a] rounded-full"
+                                    />
+                                </div>
+                            </div>
+
+                            <h2 className="font-display text-3xl sm:text-5xl font-light text-[#fafafa] mb-4 sm:mb-6 uppercase tracking-tight px-2">
+                                Prêt à être <span className="italic text-[#d4b96a]">découvert</span>
+                            </h2>
+
+                            <div className="rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[rgba(212,185,106,0.05)] p-6 sm:p-8 mb-8 sm:mb-10 mx-auto">
+                                <Mail className="w-6 h-6 sm:w-8 sm:h-8 text-[#d4b96a] mx-auto mb-4" />
+                                <p className="text-[#fafafa] text-base sm:text-lg mb-2 font-medium">
+                                    Votre rapport a été envoyé !
+                                </p>
+                                <p className="text-[#a1a1aa] text-sm sm:text-base leading-relaxed">
+                                    Consultez votre boîte de réception <br className="sm:hidden" />{' '}
+                                    (et vos spams). <br />
+                                    Votre destin est désormais entre vos mains.
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={() => (window.location.href = '/')}
+                                className="w-full sm:w-auto px-10 py-4 bg-[#fafafa] text-[#09090b] font-medium text-sm tracking-wide rounded-full hover:bg-zinc-200 transition-all duration-300"
+                            >
+                                Retour à l'accueil
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            <Footer />
+        </main>
+    );
+}
