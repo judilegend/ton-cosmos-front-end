@@ -140,6 +140,24 @@ const complet_features = [
     'Accès prioritaire par email (PDF)',
 ];
 
+const annee_cosmique_features = [
+    ...essentiel_features,
+    'Révolution Solaire (Thème Anniversaire)',
+    'Prévisions détaillées mois par mois',
+    'Amour, Carrière, Énergie & Finances',
+    'Format Cosmos (env. 40 pages)',
+];
+
+const cosmos_integral_features = [
+    ...complet_features,
+    'Révolution Solaire (Thème Anniversaire)',
+    'Prévisions détaillées mois par mois',
+    'La Boussole Karmique profonde',
+    'Accompagnement Audio Guidé (TTS)',
+    'Poster HD A3 Imprimable (Carte du Ciel)',
+    'Format Ultime (Tout inclus, +70 pages)',
+];
+
 export const plans = {
     essentiel: {
         name: 'Essentiel',
@@ -156,10 +174,29 @@ export const plans = {
         name: 'Complet',
         price: '19,90',
         priceNum: 19.9,
-        popular: true,
         features: complet_features,
         missing: [],
     },
+    annee_cosmique: {
+        name: 'Année Cosmique',
+        price: '24,90',
+        priceNum: 24.9,
+        features: annee_cosmique_features,
+        missing: [
+            'Espace de Guérison (Chiron & Lune Noire)',
+            'Géométrie des Astres (Aspects majeurs)',
+        ],
+    },
+    cosmos_integral: {
+        name: 'Cosmos Intégral',
+        price: '39,90',
+        priceNum: 39.9,
+        popular: true,
+        badge: 'Tout inclus',
+        features: cosmos_integral_features,
+        missing: [],
+    },
 };
+
 
 export const links = {};
