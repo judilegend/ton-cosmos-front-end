@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import Footer from '@/components/landing/Footer';
 import HeaderSection from '@/components/landing/Header';
-import { Loader2, Lock } from 'lucide-react';
+import { Loader2, Lock, ArrowLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrnamentDivider } from '@/components/icons';
@@ -170,7 +170,14 @@ export default function PayementPage() {
                     </div>
                 </div>
 
-                <div className="mt-10 flex items-center justify-center px-5">
+                <div className="mt-10 px-5 flex items-center justify-between">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-x-2 text-sm text-zinc-400 font-medium hover:text-[#a1a1aa] transition-colors cursor-pointer"
+                    >
+                        <ArrowLeft size={18} />
+                        Retour
+                    </button>
                     <button
                         onClick={onSubmit}
                         disabled={processing}
