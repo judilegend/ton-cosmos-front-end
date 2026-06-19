@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import Footer from '@/components/landing/Footer';
 import HeaderSection from '@/components/landing/Header';
-import { Loader2, Lock } from 'lucide-react';
+import { Loader2, Lock, ArrowLeft } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrnamentDivider } from '@/components/icons';
@@ -44,8 +44,6 @@ export default function PayementPage() {
     const [paymentData] = useState<PaymentData | null>(getStoredPayment);
 
     const [processing, setprocessing] = useState(false);
-    const [hasAudio, setHasAudio] = useState(false);
-    const [hasPoster, setHasPoster] = useState(false);
     const { request } = useApi<CheckSessionResponse>();
 
     useEffect(() => {
@@ -54,14 +52,8 @@ export default function PayementPage() {
         }
     }, [paymentData, navigate]);
 
-    const isIntegral = paymentData?.selected_plan === 'cosmos_integral';
-    const basePrice = paymentData ? (plans[paymentData.selected_plan]?.priceNum || 0) : 0;
-    const audioPrice = (hasAudio && !isIntegral) ? 4.90 : 0;
-    const posterPrice = (hasPoster && !isIntegral) ? 9.90 : 0;
-    
-    const totalPriceNum = basePrice + audioPrice + posterPrice;
-    const totalPrice = totalPriceNum.toFixed(2).replace('.', ',');
-    const totalCents = Math.round(totalPriceNum * 100);
+    const basePrice = paymentData ? (plans[paymentData.selected_plan]?.price || '0') : '0';
+    const totalPrice = basePrice;
 
     const onSubmit = async () => {
         if (!paymentData) return;
@@ -72,9 +64,9 @@ export default function PayementPage() {
             plan_type: paymentData.selected_plan,
             email: paymentData.email,
             order_id: paymentData.order_id,
-            amount_total: totalCents,
-            has_audio: isIntegral || hasAudio,
-            has_poster: isIntegral || hasPoster,
+            amount_total: paymentData.amount_total,
+            has_audio: false,
+            has_poster: false,
         };
 
         try {
@@ -178,69 +170,14 @@ export default function PayementPage() {
                     </div>
                 </div>
 
-                {!isIntegral && (
-                    <div className="mt-8 space-y-4">
-                        <h4 className="text-xs uppercase tracking-[0.2em] text-[#d4b96a] font-medium mb-3">
-                            Recommandations pour compléter votre expérience
-                        </h4>
-                        
-                        {/* Audio Bump */}
-                        <label
-                            className={`flex items-start gap-4 p-5 rounded-xl border transition-all duration-200 cursor-pointer select-none ${
-                                hasAudio
-                                    ? 'border-[#d4b96a]/40 bg-[rgba(212,185,106,0.04)]'
-                                    : 'border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.01)] hover:border-[rgba(255,255,255,0.1)]'
-                            }`}
-                        >
-                            <input
-                                type="checkbox"
-                                checked={hasAudio}
-                                onChange={(e) => setHasAudio(e.target.checked)}
-                                className="mt-1 accent-[#d4b96a] cursor-pointer"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium text-[#fafafa]">
-                                        Accompagnement Audio Guidé (TTS)
-                                    </span>
-                                    <span className="text-sm font-semibold text-[#d4b96a]">+ 4,90€</span>
-                                </div>
-                                <p className="text-xs text-[#a1a1aa] mt-1">
-                                    Recevez la lecture audio personnalisée de la synthèse de votre thème pour vous imprégner de vos énergies n'importe où.
-                                </p>
-                            </div>
-                        </label>
-
-                        {/* Poster Bump */}
-                        <label
-                            className={`flex items-start gap-4 p-5 rounded-xl border transition-all duration-200 cursor-pointer select-none ${
-                                hasPoster
-                                    ? 'border-[#d4b96a]/40 bg-[rgba(212,185,106,0.04)]'
-                                    : 'border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.01)] hover:border-[rgba(255,255,255,0.1)]'
-                            }`}
-                        >
-                            <input
-                                type="checkbox"
-                                checked={hasPoster}
-                                onChange={(e) => setHasPoster(e.target.checked)}
-                                className="mt-1 accent-[#d4b96a] cursor-pointer"
-                            />
-                            <div className="flex-1">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm font-medium text-[#fafafa]">
-                                        Poster HD A3 Imprimable (Carte du Ciel)
-                                    </span>
-                                    <span className="text-sm font-semibold text-[#d4b96a]">+ 9,90€</span>
-                                </div>
-                                <p className="text-xs text-[#a1a1aa] mt-1">
-                                    Téléchargez votre carte du ciel en haute définition A3, conçue avec une bordure dorée élégante pour être imprimée et encadrée.
-                                </p>
-                            </div>
-                        </label>
-                    </div>
-                )}
-
-                <div className="mt-10 flex items-center justify-center px-5">
+                <div className="mt-10 px-5 flex items-center justify-between">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center gap-x-2 text-sm text-zinc-400 font-medium hover:text-[#a1a1aa] transition-colors cursor-pointer"
+                    >
+                        <ArrowLeft size={18} />
+                        Retour
+                    </button>
                     <button
                         onClick={onSubmit}
                         disabled={processing}
