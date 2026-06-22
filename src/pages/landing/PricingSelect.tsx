@@ -77,7 +77,7 @@ export default function SelectPlanPage() {
 
         setLoading(true);
 
-        const planSelected = plans[selectedPlan].name;
+        // const planSelected = plans[selectedPlan].name;
         const price = plans[selectedPlan].price;
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const finalBirthTime = orderData.birth_time || '12:00';
@@ -158,8 +158,9 @@ export default function SelectPlanPage() {
                 </motion.div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-12 gap-x-5 items-start mb-12">
-                    {(Object.entries(plans) as [Plan, typeof plans.essentiel][]).map(
-                        ([key, plan]) => (
+                    {(Object.entries(plans) as [Plan, typeof plans.essentiel][])
+                        .filter(([key]) => key !== 'cosmos_integral')
+                        .map(([key, plan]) => (
                             <button
                                 key={key}
                                 onClick={() => {

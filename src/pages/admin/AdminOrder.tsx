@@ -87,7 +87,7 @@ const formatCurrency = (amount: number, currency = 'EUR') => {
     return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
         currency: currency,
-    }).format(amount);
+    }).format(amount / 100); 
 };
 
 export default function AdminOrder() {
