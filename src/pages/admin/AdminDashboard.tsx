@@ -23,39 +23,38 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useEffect } from 'react';
 import { WEB_SOCKET_BASE } from '@/hooks/UseApi';
 
-const StatusConfig: Record<string, { label: string; bg: string; color: string; icon: LucideIcon }> =
-    {
-        pending_payment: {
-            label: 'Attente paiement',
-            bg: 'bg-zinc-500/10',
-            color: 'text-zinc-600 dark:text-zinc-400',
-            icon: Clock,
-        },
-        paid: {
-            label: 'Payé',
-            bg: 'bg-emerald-500/10',
-            color: 'text-emerald-600 dark:text-emerald-400',
-            icon: CheckCircle2,
-        },
-        processing: {
-            label: 'En cours',
-            bg: 'bg-blue-500/10',
-            color: 'text-blue-600 dark:text-blue-400',
-            icon: RefreshCcw,
-        },
-        completed: {
-            label: 'Terminé',
-            bg: 'bg-[#d4b96a]/10',
-            color: 'text-[#a88b3c] dark:text-[#a88b3c]',
-            icon: Check,
-        },
-        failed: {
-            label: 'Échec',
-            bg: 'bg-rose-500/10',
-            color: 'text-rose-600 dark:text-rose-400',
-            icon: XCircle,
-        },
-    };
+const StatusConfig: Record<string, { label: string; bg: string; color: string; icon: LucideIcon }> = {
+    pending_payment: {
+        label: 'Attente paiement',
+        bg: 'bg-zinc-500/10',
+        color: 'text-zinc-600 dark:text-zinc-400',
+        icon: Clock,
+    },
+    paid: {
+        label: 'Payé',
+        bg: 'bg-emerald-500/10',
+        color: 'text-emerald-600 dark:text-emerald-400',
+        icon: CheckCircle2,
+    },
+    processing: {
+        label: 'En cours',
+        bg: 'bg-blue-500/10',
+        color: 'text-blue-600 dark:text-blue-400',
+        icon: RefreshCcw,
+    },
+    completed: {
+        label: 'Terminé',
+        bg: 'bg-[#d4b96a]/10',
+        color: 'text-[#a88b3c] dark:text-[#a88b3c]',
+        icon: Check,
+    },
+    failed: {
+        label: 'Échec',
+        bg: 'bg-rose-500/10',
+        color: 'text-rose-600 dark:text-rose-400',
+        icon: XCircle,
+    },
+};
 
 const PlanConfig = {
     essentiel: {
@@ -98,6 +97,7 @@ export default function AdminDashboard() {
         }).format(amount / 100);
     };
 
+    // WebSocket : Événements des commandes
     useEffect(() => {
         const socket = new WebSocket(`${WEB_SOCKET_BASE}/order/ws/admin-order-event`);
 
@@ -109,21 +109,16 @@ export default function AdminDashboard() {
         };
 
         socket.onopen = () => console.log('Connecté au WebSocket for order');
-        socket.onclose = () => {
-            setTimeout(() => {
-                socket.onopen = () => console.log('Connecté au WebSocket for order');
-            }, 5000);
-        };
+        socket.onclose = () => console.log('WebSocket order fermé');
 
         return () => {
             socket.close();
         };
-    }, [updateData]);
+    }, []); // Correction: tableau vide pour éviter la boucle infinie
 
+    // WebSocket : Statuts des paiements Stripe
     useEffect(() => {
-        const socket_status = new WebSocket(
-            `${WEB_SOCKET_BASE}/stripe/order/ws/order-status-for-admin`,
-        );
+        const socket_status = new WebSocket(`${WEB_SOCKET_BASE}/stripe/order/ws/order-status-for-admin`);
 
         socket_status.onmessage = (event) => {
             const data = JSON.parse(event.data);
@@ -133,10 +128,13 @@ export default function AdminDashboard() {
             }
         };
 
+        socket_status.onopen = () => console.log('Connecté au WebSocket for status');
+        socket_status.onclose = () => console.log('WebSocket status fermé');
+
         return () => {
             socket_status.close();
         };
-    }, [updateStatus]);
+    }, []); // Correction: tableau vide pour éviter la boucle infinie
 
     return (
         <section>
@@ -159,8 +157,7 @@ export default function AdminDashboard() {
 
                     <p className="text-sm md:text-base text-zinc-500 dark:text-zinc-400 mt-1 font-light">
                         Ravi de vous revoir,{' '}
-                        <span className="font-medium text-zinc-900 dark:text-zinc-200">Joseph</span>
-                        .
+                        <span className="font-medium text-zinc-900 dark:text-zinc-200">Joseph</span>.
                     </p>
                 </div>
 
@@ -170,13 +167,13 @@ export default function AdminDashboard() {
                         className="group relative inline-flex items-center gap-2 px-6 py-2.5 text-sm font-medium text-zinc-600 dark:text-zinc-300 border border-zinc-200 dark:border-white/10 rounded-xl hover:bg-zinc-50 dark:hover:bg-white/5 transition-all duration-300 shadow-sm dark:shadow-none overflow-hidden"
                     >
                         <div className="absolute inset-0 w-full h-full bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-
                         <ExternalLink size={16} className="text-[#d4b96a] opacity-80" />
                         <span>Voir le site</span>
                     </Link>
                 </div>
             </div>
 
+            {/* Skeletons des stats */}
             {loadStat && (
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
                     {[...Array(4)].map((_, i) => (
@@ -188,9 +185,7 @@ export default function AdminDashboard() {
                                 <Skeleton className="h-3 w-20 bg-zinc-200 dark:bg-zinc-800" />
                                 <Skeleton className="h-4 w-4 rounded-md bg-zinc-200 dark:bg-zinc-800" />
                             </div>
-
                             <Skeleton className="h-8 w-16 mb-2 bg-zinc-200 dark:bg-zinc-800" />
-
                             <Skeleton className="h-3 w-24 bg-zinc-200 dark:bg-zinc-800" />
                         </div>
                     ))}
@@ -201,7 +196,7 @@ export default function AdminDashboard() {
             {stats.length > 0 && (
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
                     {stats.map((stat) => {
-                        const Icon = Icons[stat.icon];
+                        const Icon = Icons[stat.icon as keyof typeof Icons] || BarChart3;
                         return (
                             <div
                                 key={stat.label}
@@ -227,22 +222,22 @@ export default function AdminDashboard() {
                 </div>
             )}
 
-            <div className='className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md rounded-lg overflow-hidden'>
-                {/* Header */}
+            {/* Tableau des commandes (Correction de la syntaxe className ici) */}
+            <div className="rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 shadow-md overflow-hidden">
+                {/* Header Tableau */}
                 <div className="flex items-end justify-between gap-x-8 p-5 mb-5">
-                    <div className="">
+                    <div>
                         <h3 className="text-lg font-semibold text-zinc-900 dark:text-[#fafafa] tracking-tight">
                             Commandes récentes
                         </h3>
                         <p className="text-sm text-zinc-500 dark:text-[#a1a1aa] leading-relaxed mt-1 font-light">
-                            Consultez et gérez les dernières transactions effectuées sur votre
-                            boutique en temps réel.
+                            Consultez et gérez les dernières transactions effectuées sur votre boutique en temps réel.
                         </p>
                     </div>
 
                     <Link
                         to={ADMIN_ORDER_PATH}
-                        className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-zinc-600 dark:text-zinc-400 bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/20 rounded-xl shadow-sm dark:shadow-none hover:bg-zinc-50 dark:hover:bg-white/10 hover:text-zinc-900 dark:hover:text-[#fafafa] hover:border-zinc-300 dark:hover:border-white/15 active:scale-[0.97] transition-all duration-200 cursor-pointer`}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-zinc-600 dark:text-zinc-400 bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/20 rounded-xl shadow-sm dark:shadow-none hover:bg-zinc-50 dark:hover:bg-white/10 hover:text-zinc-900 dark:hover:text-[#fafafa] hover:border-zinc-300 dark:hover:border-white/15 active:scale-[0.97] transition-all duration-200 cursor-pointer"
                     >
                         <span>Voir tout</span>
                     </Link>
@@ -252,53 +247,28 @@ export default function AdminDashboard() {
                     <table className="w-full">
                         <thead className="bg-zinc-50/50 dark:bg-white/2">
                             <tr className="border-b border-zinc-200/60 dark:border-white/6">
-                                <th className="text-left px-6 py-4 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 tracking-widest uppercase">
-                                    #
-                                </th>
-                                <th className="text-left px-6 py-4 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 tracking-widest uppercase">
-                                    Date
-                                </th>
-                                <th className="text-left px-6 py-4 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 tracking-widest uppercase">
-                                    Client
-                                </th>
-                                <th className="text-center px-6 py-4 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 tracking-widest uppercase">
-                                    Formule
-                                </th>
-                                <th className="text-center px-6 py-4 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 tracking-widest uppercase">
-                                    Montant
-                                </th>
-                                <th className="text-right px-6 py-4 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 tracking-widest uppercase">
-                                    Statut
-                                </th>
+                                <th className="text-left px-6 py-4 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 tracking-widest uppercase">#</th>
+                                <th className="text-left px-6 py-4 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 tracking-widest uppercase">Date</th>
+                                <th className="text-left px-6 py-4 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 tracking-widest uppercase">Client</th>
+                                <th className="text-center px-6 py-4 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 tracking-widest uppercase">Formule</th>
+                                <th className="text-center px-6 py-4 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 tracking-widest uppercase">Montant</th>
+                                <th className="text-right px-6 py-4 text-[11px] font-bold text-zinc-500 dark:text-zinc-400 tracking-widest uppercase">Statut</th>
                             </tr>
                         </thead>
 
                         <tbody>
                             {load_order_dashboard ? (
                                 [...Array(5)].map((_, i) => (
-                                    <tr
-                                        key={`skeleton-${i}`}
-                                        className="border-b border-zinc-100 last:border-none dark:border-white/4"
-                                    >
-                                        <td className="px-6 py-4">
-                                            <Skeleton className="h-4 w-8 bg-zinc-100 dark:bg-zinc-800" />
-                                        </td>
+                                    <tr key={`skeleton-${i}`} className="border-b border-zinc-100 last:border-none dark:border-white/4">
+                                        <td className="px-6 py-4"><Skeleton className="h-4 w-8 bg-zinc-100 dark:bg-zinc-800" /></td>
                                         <td className="px-6 py-4">
                                             <Skeleton className="h-4 w-24 mb-1 bg-zinc-100 dark:bg-zinc-800" />
                                             <Skeleton className="h-3 w-12 bg-zinc-50 dark:bg-zinc-800/50" />
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <Skeleton className="h-4 w-32 bg-zinc-100 dark:bg-zinc-800" />
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <Skeleton className="h-6 w-20 rounded-full mx-auto bg-zinc-100 dark:bg-zinc-800" />
-                                        </td>
-                                        <td className="px-6 py-4 text-center">
-                                            <Skeleton className="h-4 w-16 mx-auto bg-zinc-100 dark:bg-zinc-800" />
-                                        </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <Skeleton className="h-6 w-24 rounded-full ml-auto bg-zinc-100 dark:bg-zinc-800" />
-                                        </td>
+                                        <td className="px-6 py-4"><Skeleton className="h-4 w-32 bg-zinc-100 dark:bg-zinc-800" /></td>
+                                        <td className="px-6 py-4 text-center"><Skeleton className="h-6 w-20 rounded-full mx-auto bg-zinc-100 dark:bg-zinc-800" /></td>
+                                        <td className="px-6 py-4 text-center"><Skeleton className="h-4 w-16 mx-auto bg-zinc-100 dark:bg-zinc-800" /></td>
+                                        <td className="px-6 py-4 text-right"><Skeleton className="h-6 w-24 rounded-full ml-auto bg-zinc-100 dark:bg-zinc-800" /></td>
                                     </tr>
                                 ))
                             ) : orders_dashboard.length > 0 ? (
@@ -307,90 +277,56 @@ export default function AdminDashboard() {
                                         key={order.id}
                                         className="border-b border-zinc-100 last:border-none dark:border-white/4 hover:bg-zinc-50 dark:hover:bg-zinc-900/50 transition-colors group"
                                     >
-                                        {/* ID Commande */}
                                         <td className="px-6 py-4">
                                             <span className="font-mono text-xs font-medium text-nowrap text-zinc-500 dark:text-zinc-400 group-hover:text-[#d4b96a] transition-colors">
                                                 #{order.id > 9 ? order.id : `0${order.id}`}
                                             </span>
                                         </td>
-
-                                        {/* Date & Heure */}
                                         <td className="px-6 py-4">
                                             <div className="text-sm text-zinc-900 text-nowrap dark:text-zinc-200">
-                                                {new Date(order.created_at).toLocaleDateString(
-                                                    'fr-FR',
-                                                    {
-                                                        day: '2-digit',
-                                                        month: 'long',
-                                                        year: 'numeric',
-                                                    },
-                                                )}
+                                                {new Date(order.created_at).toLocaleDateString('fr-FR', {
+                                                    day: '2-digit',
+                                                    month: 'long',
+                                                    year: 'numeric',
+                                                })}
                                             </div>
                                             <div className="text-xs text-zinc-400 text-nowrap dark:text-zinc-400 font-light">
-                                                {new Date(order.created_at).toLocaleTimeString(
-                                                    'fr-FR',
-                                                    {
-                                                        hour: '2-digit',
-                                                        minute: '2-digit',
-                                                    },
-                                                )}
+                                                {new Date(order.created_at).toLocaleTimeString('fr-FR', {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                })}
                                             </div>
                                         </td>
-
-                                        {/* Client */}
                                         <td className="px-6 py-4">
-                                            {/*<div className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                                            {MaskingService.maskName(order.full_name)}
-                                        </div>*/}
                                             <div className="text-[13px] text-zinc-500 text-nowrap dark:text-zinc-400 truncate max-w-35 font-light">
                                                 {MaskingService.maskEmail(order.email)}
                                             </div>
                                         </td>
-
-                                        {/* Formule */}
                                         <td className="px-6 py-4 text-center">
                                             {(() => {
-                                                const planConfig = PlanConfig[
-                                                    order.plan_type as keyof typeof PlanConfig
-                                                ] || {
+                                                const planConfig = PlanConfig[order.plan_type as keyof typeof PlanConfig] || {
                                                     color: 'text-zinc-500',
                                                     bg: 'bg-zinc-500/10',
                                                     border: 'border-zinc-500/20',
                                                 };
-
                                                 return (
-                                                    <span
-                                                        className={`inline-block text-[10px] text-nowrap font-bold px-2.5 py-1 rounded-full border capitalize tracking-[0.15em] ${planConfig.bg} ${planConfig.color} ${planConfig.border}`}
-                                                    >
+                                                    <span className={`inline-block text-[10px] text-nowrap font-bold px-2.5 py-1 rounded-full border capitalize tracking-[0.15em] ${planConfig.bg} ${planConfig.color} ${planConfig.border}`}>
                                                         {order.plan_type}
                                                     </span>
                                                 );
                                             })()}
                                         </td>
-
-                                        {/* Montant */}
                                         <td className="px-6 py-4 text-center">
                                             <span className="text-sm font-semibold text-nowrap text-zinc-900 dark:text-zinc-200">
                                                 {formatCurrency(order.amount_total)}
                                             </span>
                                         </td>
-
-                                        {/* Statut */}
-                                        <td className="px-6 py-4 text-center">
+                                        <td className="px-6 py-4 text-right">
                                             {(() => {
-                                                const config =
-                                                    StatusConfig[order.status] ||
-                                                    StatusConfig.pending_payment;
+                                                const config = StatusConfig[order.status] || StatusConfig.pending_payment;
                                                 const Icon = config.icon;
-
                                                 return (
-                                                    <span
-                                                        className={`
-                                                        inline-flex items-center text-nowrap gap-1.5 px-2.5 py-1 rounded-full capitalize 
-                                                        text-[10px] font-bold tracking-widest border border-current/10
-                                                        ${config.bg} ${config.color}
-                                                    `}
-                                                    >
+                                                    <span className={`inline-flex items-center text-nowrap gap-1.5 px-2.5 py-1 rounded-full capitalize text-[10px] font-bold tracking-widest border border-current/10 ${config.bg} ${config.color}`}>
                                                         <Icon
                                                             className={`w-3.5 h-3.5 ${config.label === 'En cours' ? 'animate-spin' : ''}`}
                                                             strokeWidth={2.5}
@@ -406,46 +342,30 @@ export default function AdminDashboard() {
                                 <tr className="bg-white dark:bg-zinc-900/50">
                                     <td colSpan={7} className="px-6 py-20">
                                         <div className="flex flex-col items-center justify-center max-w-100 mx-auto text-center">
-                                            {/* Icône décorative avec effet de halo */}
                                             <div className="relative mb-6">
                                                 <div className="absolute inset-0 bg-[#d4b96a]/10 blur-2xl rounded-full" />
                                                 <div className="relative flex items-center justify-center w-16 h-16 bg-zinc-50 dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700 shadow-sm">
-                                                    <Search
-                                                        className="w-8 h-8 text-zinc-400"
-                                                        strokeWidth={1.5}
-                                                    />
+                                                    <Search className="w-8 h-8 text-zinc-400" strokeWidth={1.5} />
                                                 </div>
                                             </div>
 
-                                            {/* Texte informatif */}
                                             <h3 className="text-lg font-medium text-zinc-900 dark:text-[#fafafa] mb-2">
                                                 En attente de vos premières commandes
                                             </h3>
                                             <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-8">
-                                                Il n'y a pour le moment aucune transaction à
-                                                afficher. Dès qu'un client passera commande, les
-                                                détails s'afficheront sur cette page.
+                                                Il n'y a pour le moment aucune transaction à afficher. Dès qu'un client passera commande, les détails s'afficheront sur cette page.
                                             </p>
 
-                                            {/* Actions de récupération */}
                                             <div className="flex items-center gap-3">
                                                 <Button
                                                     variant="outline"
-                                                    onClick={() =>
-                                                        reload_get_orders(
-                                                            'dashboard',
-                                                            1,
-                                                            10,
-                                                            '',
-                                                            'all',
-                                                        )
-                                                    }
+                                                    onClick={() => reload_get_orders('dashboard', 1, 10, '', 'all')}
                                                     className="gap-2 rounded-lg border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800"
                                                 >
                                                     {reload_order_dashboard ? (
                                                         <>
-                                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />{' '}
-                                                            Réinitialissation...
+                                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                                            Réinitialisation...
                                                         </>
                                                     ) : (
                                                         <>
