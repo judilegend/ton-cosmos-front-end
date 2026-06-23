@@ -106,6 +106,8 @@ export default function PayementSuccessPage() {
         return savedStep ? parseInt(savedStep, 10) : 1;
     });
 
+    const [stepStatus, setStepStatus] = useState<string>('');
+
     const [isFinished, setIsFinished] = useState<boolean>(() => {
         const savedStep = localStorage.getItem('currentStep');
         return savedStep === '5';
@@ -128,6 +130,7 @@ export default function PayementSuccessPage() {
                     const newStep = data.step;
 
                     setStep(newStep);
+                    setStepStatus(typeof data.status === 'string' ? data.status : '');
 
                     localStorage.setItem('currentStep', newStep.toString());
 
@@ -195,8 +198,20 @@ export default function PayementSuccessPage() {
                                     />
                                     <StepItem
                                         icon={Send}
-                                        title="Envoi de votre Destin"
-                                        description="Votre rapport complet arrive dans votre boîte mail"
+                                        title={
+                                            step === 4 && stepStatus === 'generating_audio'
+                                                ? 'Création de la version Audio'
+                                                : step === 4 && stepStatus === 'generating_poster'
+                                                ? 'Création du Poster HD'
+                                                : 'Envoi de votre Destin'
+                                        }
+                                        description={
+                                            step === 4 && stepStatus === 'generating_audio'
+                                                ? 'Votre synthèse audio vocale est en cours de génération...'
+                                                : step === 4 && stepStatus === 'generating_poster'
+                                                ? 'Votre poster haute définition de la carte du ciel est en cours de création...'
+                                                : 'Votre rapport complet est finalisé et envoyé par email'
+                                        }
                                         status={step === 4 ? 'loading' : step > 4 ? 'done' : 'wait'}
                                     />
                                 </div>
