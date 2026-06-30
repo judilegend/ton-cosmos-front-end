@@ -1,16 +1,22 @@
 import { BASE_USER_API, REFRESH_TOKEN_ENDPOINT } from '@/hooks/UseApi';
 
-const TOKEN_KEY = 'ton-cosmos-access';
+/**
+ * Token store memory-only.
+ * L'access token n'est JAMAIS écrit dans sessionStorage ni localStorage.
+ * Un XSS ne peut donc pas le lire. La session survit grâce au
+ * refresh token httpOnly géré par le backend.
+ */
+let _accessToken: string | null = null;
 
-export const setToken = (token: string) => {
-    sessionStorage.setItem(TOKEN_KEY, token);
+export const setToken = (token: string): void => {
+    _accessToken = token;
 };
 
-export const clearToken = () => {
-    sessionStorage.removeItem(TOKEN_KEY);
+export const clearToken = (): void => {
+    _accessToken = null;
 };
 
-const isExpired = (token: string) => {
+const isExpired = (token: string): boolean => {
     try {
         const payload = JSON.parse(atob(token.split('.')[1]));
         return payload.exp * 1000 - 60000 < Date.now();
@@ -20,14 +26,12 @@ const isExpired = (token: string) => {
 };
 
 export const getAccessToken = async (): Promise<string | null> => {
-    const token = sessionStorage.getItem(TOKEN_KEY);
-
-    if (!token) return null;
-
-    if (!isExpired(token)) {
-        return token;
+    // Token en mémoire valide : on le renvoie directement
+    if (_accessToken && !isExpired(_accessToken)) {
+        return _accessToken;
     }
 
+    // Token absent ou expiré : on tente un silent refresh via le cookie httpOnly
     try {
         const res = await fetch(`${BASE_USER_API}${REFRESH_TOKEN_ENDPOINT}`, {
             method: 'POST',
