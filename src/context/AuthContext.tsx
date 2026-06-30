@@ -242,19 +242,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         search: string = '',
         status: string = 'all',
     ) => {
-        const skip = (page - 1) * limit;
-        const params = new URLSearchParams({ skip: '0', limit: '10' });
+        const params = new URLSearchParams();
 
         if (type === 'all') {
+            const skip = (page - 1) * limit;
             set_reload_all_orders(true);
-            params.append('skip', skip.toString());
-            params.append('limit', limit.toString());
-            if (search) params.append('search', search);
-            if (status && status !== 'all') params.append('status', status);
+            params.set('skip', skip.toString());
+            params.set('limit', limit.toString());
+            if (search) params.set('search', search);
+            if (status && status !== 'all') params.set('status', status);
         } else {
             set_reload_order_dashboard(true);
-            params.append('skip', '0');
-            params.append('limit', '10');
+            params.set('skip', '0');
+            params.set('limit', '10');
         }
 
         try {
@@ -286,6 +286,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
         }
     };
+
 
     const deleteOrder = async (order_id: number) => {
         const newListAllOrder = all_orders.filter((order) => order.id != order_id);
