@@ -206,6 +206,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let isMounted = true;
 
         const checkAuth = async () => {
+            // Evite l'appel API refresh-token (et l'erreur 401) pour les visiteurs publics
+            if (!window.location.pathname.startsWith('/administrator')) {
+                if (isMounted) setLoading(false);
+                return;
+            }
+
             if (isMounted) {
                 await initAuth();
             }
