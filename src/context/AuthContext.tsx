@@ -23,6 +23,8 @@ export interface Order {
     plan_type: string;
     status: OrderStatus;
     amount_total: number;
+    has_audio?: boolean;
+    has_poster?: boolean;
     created_at: string;
     updated_at: string;
 }
