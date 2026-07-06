@@ -172,15 +172,15 @@ export const plans = {
     },
     complet: {
         name: 'Complet',
-        price: '19,90',
-        priceNum: 19.9,
+        price: '24,90',
+        priceNum: 24.9,
         features: complet_features,
         missing: [],
     },
     annee_cosmique: {
         name: 'Année Cosmique',
-        price: '24,90',
-        priceNum: 24.9,
+        price: '34,90',
+        priceNum: 34.9,
         features: annee_cosmique_features,
         missing: [
             'Espace de Guérison (Chiron & Lune Noire)',
@@ -189,8 +189,8 @@ export const plans = {
     },
     cosmos_integral: {
         name: 'Cosmos Intégral',
-        price: '39,90',
-        priceNum: 39.9,
+        price: '59,90',
+        priceNum: 59.9,
         popular: true,
         badge: 'Tout inclus',
         features: cosmos_integral_features,
