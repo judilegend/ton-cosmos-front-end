@@ -58,8 +58,8 @@ export default function PayementPage() {
     const plan = paymentData ? plans[paymentData.selected_plan] : null;
     const basePriceNum = plan ? plan.priceNum : 0;
 
-    const AUDIO_BUMP_PRICE = 4.90;
-    const POSTER_BUMP_PRICE = 9.90;
+    const AUDIO_BUMP_PRICE = 9.90;
+    const POSTER_BUMP_PRICE = 14.90;
 
     const computedTotal = basePriceNum +
         (hasAudio && !isIntegral ? AUDIO_BUMP_PRICE : 0) +
@@ -73,8 +73,8 @@ export default function PayementPage() {
         setprocessing(true);
 
         const computedAmountTotal = paymentData.amount_total +
-            (hasAudio && !isIntegral ? 490 : 0) +
-            (hasPoster && !isIntegral ? 990 : 0);
+            (hasAudio && !isIntegral ? 990 : 0) +
+            (hasPoster && !isIntegral ? 1490 : 0);
 
         const payload = {
             plan_type: paymentData.selected_plan,
@@ -215,7 +215,7 @@ export default function PayementPage() {
                                         Accompagnement Audio Guidé (TTS)
                                     </h4>
                                     <span className="text-sm font-medium text-[#d4b96a]">
-                                        {isIntegral ? 'Inclus' : '+4,90 €'}
+                                        {isIntegral ? 'Inclus' : '+9,90 €'}
                                     </span>
                                 </div>
                                 <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
@@ -255,7 +255,7 @@ export default function PayementPage() {
                                         Poster de la Carte du Ciel HD
                                     </h4>
                                     <span className="text-sm font-medium text-[#d4b96a]">
-                                        {isIntegral ? 'Inclus' : '+9,90 €'}
+                                        {isIntegral ? 'Inclus' : '+14,90 €'}
                                     </span>
                                 </div>
                                 <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
