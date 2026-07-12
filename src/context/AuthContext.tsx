@@ -102,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
             if (response?.success) {
                 setAdmin(response.data);
-            } 
+            }
         } catch {
             setAdmin(null);
         }
@@ -194,7 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 getStats(),
                 get_order_dashboard(),
                 get_all_orders(1, 10),
-                get_admin_data()
+                get_admin_data(),
             ]);
         } catch {
             setIsAuthenticated(false);
@@ -295,7 +295,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     };
 
-
     const deleteOrder = async (order_id: number) => {
         const newListAllOrder = all_orders.filter((order) => order.id != order_id);
         set_all_orders(newListAllOrder);
@@ -325,8 +324,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const updateStatus = async (order_id: number, status: OrderStatus) => {
-        set_order_dashboard((prev) => prev.map(o => o.id === order_id ? { ...o, status } : o));
-        set_all_orders((prev) => prev.map(o => o.id === order_id ? { ...o, status } : o));
+        set_order_dashboard((prev) => prev.map((o) => (o.id === order_id ? { ...o, status } : o)));
+        set_all_orders((prev) => prev.map((o) => (o.id === order_id ? { ...o, status } : o)));
 
         try {
             const response = await get_stats(GET_STATS_ENDPOINT, { method: 'GET' });
@@ -334,7 +333,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setStats(response.data);
             }
         } catch (err) {
-            console.error("Erreur mise à jour statut", err);
+            console.error('Erreur mise à jour statut', err);
         }
     };
 
