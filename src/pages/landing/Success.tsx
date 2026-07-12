@@ -145,8 +145,9 @@ export default function PayementSuccessPage() {
 
         if (!order_id) return;
 
-        const session_id = `ton-cosmos-${order_id}`;
-        const socket = new WebSocket(`${WEB_SOCKET_BASE}/stripe/ws/${session_id}`);
+        const session_id = searchParams.get('session_id') as string | null;
+        const socketId = session_id || `ton-cosmos-${order_id}`;
+        const socket = new WebSocket(`${WEB_SOCKET_BASE}/stripe/ws/${socketId}`);
 
         socket.onmessage = (event) => {
             try {
