@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import Footer from '@/components/landing/Footer';
 import HeaderSection from '@/components/landing/Header';
-import { Loader2, Lock, ArrowLeft } from 'lucide-react';
+import { Loader2, Lock, ArrowLeft, Headphones, Image } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OrnamentDivider } from '@/components/icons';
@@ -42,6 +42,8 @@ export default function PayementPage() {
     };
 
     const [paymentData] = useState<PaymentData | null>(getStoredPayment);
+    const [hasAudio, setHasAudio] = useState(false);
+    const [hasPoster, setHasPoster] = useState(false);
 
     const [processing, setprocessing] = useState(false);
     const { request } = useApi<CheckSessionResponse>();
@@ -52,21 +54,35 @@ export default function PayementPage() {
         }
     }, [paymentData, navigate]);
 
-    const basePrice = paymentData ? (plans[paymentData.selected_plan]?.price || '0') : '0';
-    const totalPrice = basePrice;
+    const isIntegral = paymentData?.selected_plan === 'cosmos_integral';
+    const plan = paymentData ? plans[paymentData.selected_plan] : null;
+    const basePriceNum = plan ? plan.priceNum : 0;
+
+    const AUDIO_BUMP_PRICE = 9.90;
+    const POSTER_BUMP_PRICE = 14.90;
+
+    const computedTotal = basePriceNum +
+        (hasAudio && !isIntegral ? AUDIO_BUMP_PRICE : 0) +
+        (hasPoster && !isIntegral ? POSTER_BUMP_PRICE : 0);
+
+    const totalPriceStr = computedTotal.toFixed(2).replace('.', ',');
 
     const onSubmit = async () => {
         if (!paymentData) return;
 
         setprocessing(true);
 
+        const computedAmountTotal = paymentData.amount_total +
+            (hasAudio && !isIntegral ? 990 : 0) +
+            (hasPoster && !isIntegral ? 1490 : 0);
+
         const payload = {
             plan_type: paymentData.selected_plan,
             email: paymentData.email,
             order_id: paymentData.order_id,
-            amount_total: paymentData.amount_total,
-            has_audio: false,
-            has_poster: false,
+            amount_total: computedAmountTotal,
+            has_audio: isIntegral || hasAudio,
+            has_poster: isIntegral || hasPoster,
         };
 
         try {
@@ -163,9 +179,96 @@ export default function PayementPage() {
                             <div className="flex justify-between">
                                 <span className="text-[#fafafa] font-medium">Total</span>
                                 <span className="font-display text-2xl font-light text-[#d4b96a]">
-                                    {totalPrice}€
+                                    {totalPriceStr}€
                                 </span>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Options Additionnelles (Order Bumps) */}
+                <div className="mt-8 space-y-4">
+                    <h3 className="font-display text-xl font-light text-[#fafafa] text-start mb-4">
+                        {isIntegral ? 'Options incluses' : 'Optimisez votre voyage astral'}
+                    </h3>
+
+                    {/* Option Audio Bump */}
+                    <div
+                        onClick={() => {
+                            if (!isIntegral) setHasAudio(!hasAudio);
+                        }}
+                        className={`relative rounded-2xl border p-5 transition-all duration-300 text-start ${
+                            isIntegral
+                                ? 'border-[#d4b96a]/20 bg-[rgba(212,185,106,0.02)] cursor-default'
+                                : hasAudio
+                                ? 'border-[#d4b96a]/30 bg-[rgba(255,255,255,0.04)] cursor-pointer'
+                                : 'border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.015)] hover:border-[rgba(255,255,255,0.1)] cursor-pointer'
+                        }`}
+                    >
+                        <div className="flex items-start gap-4">
+                            <div className={`p-2.5 rounded-lg ${hasAudio || isIntegral ? 'bg-[#d4b96a]/10 text-[#d4b96a]' : 'bg-zinc-800 text-zinc-400'}`}>
+                                <Headphones className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                    <h4 className="text-sm font-medium text-[#fafafa]">
+                                        Accompagnement Audio Guidé (TTS)
+                                    </h4>
+                                    <span className="text-sm font-medium text-[#d4b96a]">
+                                        {isIntegral ? 'Inclus' : '+9,90 €'}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                                    Écoutez l'analyse de votre thème astral lue par une voix IA chaleureuse et immersive. Parfait pour méditer sur vos transits.
+                                </p>
+                            </div>
+                            {!isIntegral && (
+                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
+                                    hasAudio ? 'border-[#d4b96a] bg-[#d4b96a]' : 'border-zinc-700'
+                                }`}>
+                                    {hasAudio && <span className="text-[10px] text-[#09090b] font-bold">✓</span>}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Option Poster Bump */}
+                    <div
+                        onClick={() => {
+                            if (!isIntegral) setHasPoster(!hasPoster);
+                        }}
+                        className={`relative rounded-2xl border p-5 transition-all duration-300 text-start ${
+                            isIntegral
+                                ? 'border-[#d4b96a]/20 bg-[rgba(212,185,106,0.02)] cursor-default'
+                                : hasPoster
+                                ? 'border-[#d4b96a]/30 bg-[rgba(255,255,255,0.04)] cursor-pointer'
+                                : 'border-[rgba(255,255,255,0.06)] bg-[rgba(255,255,255,0.015)] hover:border-[rgba(255,255,255,0.1)] cursor-pointer'
+                        }`}
+                    >
+                        <div className="flex items-start gap-4">
+                            <div className={`p-2.5 rounded-lg ${hasPoster || isIntegral ? 'bg-[#d4b96a]/10 text-[#d4b96a]' : 'bg-zinc-800 text-zinc-400'}`}>
+                                <Image className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                    <h4 className="text-sm font-medium text-[#fafafa]">
+                                        Poster de la Carte du Ciel HD
+                                    </h4>
+                                    <span className="text-sm font-medium text-[#d4b96a]">
+                                        {isIntegral ? 'Inclus' : '+14,90 €'}
+                                    </span>
+                                </div>
+                                <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                                    Recevez un fichier PDF haute définition (format A3/A2) de votre carte du ciel natale vectorielle, prêt à être imprimé et encadré.
+                                </p>
+                            </div>
+                            {!isIntegral && (
+                                <div className={`w-5 h-5 rounded border flex items-center justify-center transition-all ${
+                                    hasPoster ? 'border-[#d4b96a] bg-[#d4b96a]' : 'border-zinc-700'
+                                }`}>
+                                    {hasPoster && <span className="text-[10px] text-[#09090b] font-bold">✓</span>}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -191,7 +294,7 @@ export default function PayementPage() {
                         ) : (
                             <>
                                 <Lock className="w-4 h-4" />
-                                Payer {totalPrice}€
+                                Payer {totalPriceStr}€
                             </>
                         )}
                     </button>

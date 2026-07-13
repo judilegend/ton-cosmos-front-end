@@ -40,15 +40,17 @@ export function useApi<T = unknown>() {
             endpoint: string,
             options?: RequestOptions<TBody>,
         ): Promise<ApiResponse<T> | null> => {
-            const isAuthRoute = [
+            const isPublicRoute = [
                 LOGIN_ENDPOINT,
                 REFRESH_TOKEN_ENDPOINT,
                 FORGOT_PASSWORD_ENDPOINT,
                 VERIFY_RESET_TOKEN_ENDPOINT,
                 RESET_PASSWORD_ENDPOINT,
+                CREATE_ORDER_ENDPOINT,
+                CHECK_STRIPE_SESSION_ENDPOINT,
             ].includes(endpoint);
 
-            const token = isAuthRoute ? null : await getAccessToken();
+            const token = isPublicRoute ? null : await getAccessToken();
 
             const headers = new Headers(options?.headers);
             headers.set('Content-Type', 'application/json');

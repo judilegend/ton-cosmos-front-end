@@ -70,17 +70,19 @@ export default function Footer() {
                         <h4 className="font-serif text-white mb-4">Suivre Indira</h4>
                         <ul className="space-y-2 text-sm text-slate-400">
                             <li>
-                                <a href="#" className="hover:text-white transition-colors">
+                                <a
+                                    href="https://www.tiktok.com/@indira_astrologue?_r=1&_t=ZN-97rhneZuXDy&fbclid=IwY2xjawS7bQpleHRuA2FlbQIxMABicmlkETEzTFNRYlBoMzlyMVhVVkltc3J0YwZhcHBfaWQQMjIyMDM5MTc4ODIwMDg5MgABHq-4GEgPzlB_XinTi1V5Nu1Gfkkn3Tfo1Lz7ZTtugRNzyQRoxVpen12Jyt8D_aem_o1_sU9QgBaJzW2uXgYdJdA"
+                                    className="hover:text-white transition-colors"
+                                >
                                     TikTok @Indira
                                 </a>
                             </li>
+
                             <li>
-                                <a href="#" className="hover:text-white transition-colors">
-                                    Instagram
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" className="hover:text-white transition-colors">
+                                <a
+                                    href="mailto:contact@toncosmos.fr"
+                                    className="hover:text-white transition-colors"
+                                >
                                     Contact
                                 </a>
                             </li>

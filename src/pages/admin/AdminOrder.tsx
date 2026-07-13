@@ -81,6 +81,18 @@ const PlanConfig = {
         bg: 'bg-[#d4b96a]/10',
         border: 'border-[#d4b96a]/20',
     },
+    annee_cosmique: {
+        label: 'Année Cosmique',
+        color: 'text-indigo-750 dark:text-indigo-300',
+        bg: 'bg-indigo-500/10',
+        border: 'border-indigo-500/20',
+    },
+    cosmos_integral: {
+        label: 'Cosmos Intégral',
+        color: 'text-amber-700 dark:text-amber-400',
+        bg: 'bg-amber-500/10',
+        border: 'border-amber-500/20',
+    },
 };
 
 const formatCurrency = (amount: number, currency = 'EUR') => {
@@ -411,17 +423,32 @@ export default function AdminOrder() {
                                                 const planConfig = PlanConfig[
                                                     order.plan_type as keyof typeof PlanConfig
                                                 ] || {
+                                                    label: order.plan_type,
                                                     color: 'text-zinc-500',
                                                     bg: 'bg-zinc-500/10',
                                                     border: 'border-zinc-500/20',
                                                 };
-
+ 
                                                 return (
-                                                    <span
-                                                        className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-full border capitalize tracking-[0.15em] ${planConfig.bg} ${planConfig.color} ${planConfig.border}`}
-                                                    >
-                                                        {order.plan_type}
-                                                    </span>
+                                                    <div className="flex flex-col items-center gap-1.5">
+                                                        <span
+                                                            className={`inline-block text-[10px] font-bold px-2.5 py-1 rounded-full border capitalize tracking-[0.15em] ${planConfig.bg} ${planConfig.color} ${planConfig.border}`}
+                                                        >
+                                                            {planConfig.label}
+                                                        </span>
+                                                        <div className="flex gap-1 justify-center mt-1">
+                                                            {order.has_audio && (
+                                                                <span className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                                                                    🎧 Audio
+                                                                </span>
+                                                            )}
+                                                            {order.has_poster && (
+                                                                <span className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                                                                    🖼️ Poster
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 );
                                             })()}
                                         </td>

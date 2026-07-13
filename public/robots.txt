@@ -1,0 +1,23 @@
+# Robots.txt — toncosmos.fr
+# Généré le 2026-07-04
+
+User-agent: *
+Allow: /
+Allow: /choose-plans
+Allow: /payments
+Allow: /payments-success
+
+# Bloquer les espaces privés (admin, auth)
+Disallow: /administrator/
+Disallow: /administrator/auth/
+Disallow: /administrator/managery/
+
+# Bloquer les ressources non pertinentes pour l'indexation
+Disallow: /src/
+Disallow: /*.json$
+
+# Sitemap
+Sitemap: https://toncosmos.fr/sitemap.xml
+
+# Délai de crawl recommandé (optionnel, ignoré par Google)
+Crawl-delay: 10

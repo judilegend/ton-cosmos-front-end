@@ -23,6 +23,8 @@ export interface Order {
     plan_type: string;
     status: OrderStatus;
     amount_total: number;
+    has_audio?: boolean;
+    has_poster?: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -100,7 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
             if (response?.success) {
                 setAdmin(response.data);
-            } 
+            }
         } catch {
             setAdmin(null);
         }
@@ -192,7 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 getStats(),
                 get_order_dashboard(),
                 get_all_orders(1, 10),
-                get_admin_data()
+                get_admin_data(),
             ]);
         } catch {
             setIsAuthenticated(false);
@@ -206,6 +208,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let isMounted = true;
 
         const checkAuth = async () => {
+            // Evite l'appel API refresh-token (et l'erreur 401) pour les visiteurs publics
+            if (!window.location.pathname.startsWith('/administrator')) {
+                if (isMounted) setLoading(false);
+                return;
+            }
+
             if (isMounted) {
                 await initAuth();
             }
@@ -242,19 +250,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         search: string = '',
         status: string = 'all',
     ) => {
-        const skip = (page - 1) * limit;
-        const params = new URLSearchParams({ skip: '0', limit: '10' });
+        const params = new URLSearchParams();
 
         if (type === 'all') {
+            const skip = (page - 1) * limit;
             set_reload_all_orders(true);
-            params.append('skip', skip.toString());
-            params.append('limit', limit.toString());
-            if (search) params.append('search', search);
-            if (status && status !== 'all') params.append('status', status);
+            params.set('skip', skip.toString());
+            params.set('limit', limit.toString());
+            if (search) params.set('search', search);
+            if (status && status !== 'all') params.set('status', status);
         } else {
             set_reload_order_dashboard(true);
-            params.append('skip', '0');
-            params.append('limit', '10');
+            params.set('skip', '0');
+            params.set('limit', '10');
         }
 
         try {
@@ -316,8 +324,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     const updateStatus = async (order_id: number, status: OrderStatus) => {
-        set_order_dashboard((prev) => prev.map(o => o.id === order_id ? { ...o, status } : o));
-        set_all_orders((prev) => prev.map(o => o.id === order_id ? { ...o, status } : o));
+        set_order_dashboard((prev) => prev.map((o) => (o.id === order_id ? { ...o, status } : o)));
+        set_all_orders((prev) => prev.map((o) => (o.id === order_id ? { ...o, status } : o)));
 
         try {
             const response = await get_stats(GET_STATS_ENDPOINT, { method: 'GET' });
@@ -325,7 +333,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 setStats(response.data);
             }
         } catch (err) {
-            console.error("Erreur mise à jour statut", err);
+            console.error('Erreur mise à jour statut', err);
         }
     };
 

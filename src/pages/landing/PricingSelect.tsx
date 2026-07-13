@@ -159,7 +159,6 @@ export default function SelectPlanPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-y-12 gap-x-5 items-start mb-12">
                     {(Object.entries(plans) as [Plan, typeof plans.essentiel][])
-                        .filter(([key]) => key !== 'cosmos_integral')
                         .map(([key, plan]) => (
                             <button
                                 key={key}
