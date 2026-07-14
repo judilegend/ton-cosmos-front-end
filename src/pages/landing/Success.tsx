@@ -98,8 +98,9 @@ function StepItem({
 
 export default function PayementSuccessPage() {
     const [searchParams] = useSearchParams();
-    // const session_id = searchParams.get('session_id') as string;
     const order_id = searchParams.get('order_id') as string;
+    const subscription = searchParams.get('subscription') as string;
+    const isSubscriptionFlow = subscription === 'success';
 
     const [step, setStep] = useState<number>(() => {
         const savedStep = localStorage.getItem('currentStep');
@@ -110,7 +111,7 @@ export default function PayementSuccessPage() {
 
     const [isFinished, setIsFinished] = useState<boolean>(() => {
         const savedStep = localStorage.getItem('currentStep');
-        return savedStep === '5';
+        return savedStep === '5' || isSubscriptionFlow;
     });
 
     const [isSubscribing, setIsSubscribing] = useState(false);
@@ -126,6 +127,7 @@ export default function PayementSuccessPage() {
                     headers: {
                         'Content-Type': 'application/json',
                     },
+                    credentials: 'include',
                 },
             );
 
@@ -147,7 +149,14 @@ export default function PayementSuccessPage() {
 
     useEffect(() => {
         sessionStorage.clear();
-        localStorage.removeItem('currentStep');
+
+        if (isSubscriptionFlow) {
+            localStorage.removeItem('currentStep');
+            setStep(5);
+            setIsFinished(true);
+            setStepStatus('');
+            return;
+        }
 
         if (!order_id) return;
 
@@ -166,19 +175,21 @@ export default function PayementSuccessPage() {
         const socket = new WebSocket(`${WEB_SOCKET_BASE}/stripe/ws/${socketId}`);
 
         const fallbackTimer = window.setTimeout(() => {
+            console.warn('WebSocket timeout - using fallback completion');
             finishFlow();
-        }, 15000);
+        }, 20000);
 
         socket.onopen = () => {
-            console.info('WebSocket connecté pour l’avancement de la commande');
+            console.info(`✓ WebSocket connecté: ${socketId}`);
         };
 
-        socket.onerror = () => {
-            console.warn('WebSocket indisponible, finalisation du suivi côté interface');
+        socket.onerror = (error) => {
+            console.warn(`✗ WebSocket erreur (${socketId}):`, error);
             finishFlow();
         };
 
         socket.onclose = () => {
+            console.info(`WebSocket fermé pour ${socketId}`);
             if (!hasResolved) {
                 finishFlow();
             }
@@ -187,6 +198,7 @@ export default function PayementSuccessPage() {
         socket.onmessage = (event) => {
             try {
                 const data = JSON.parse(event.data);
+                console.log('📨 Message socket reçu:', data);
 
                 if (data.status && data.step) {
                     const newStep = data.step;
@@ -201,15 +213,17 @@ export default function PayementSuccessPage() {
                     }
                 }
             } catch (error) {
-                console.error('Erreur lors de la lecture du message socket', error);
+                console.error('Erreur parsing socket:', error);
             }
         };
 
         return () => {
             window.clearTimeout(fallbackTimer);
-            socket.close();
+            if (socket.readyState !== WebSocket.CLOSED) {
+                socket.close();
+            }
         };
-    }, [order_id, searchParams]);
+    }, [order_id, searchParams, isSubscriptionFlow]);
 
     return (
         <main className="relative min-h-screen bg-[#09090b] text-[#fafafa] overflow-x-hidden">
@@ -218,7 +232,54 @@ export default function PayementSuccessPage() {
 
             <div className="max-w-2xl w-full pt-30 sm:pt-32 md:pt-40 pb-16 sm:pb-25 mx-auto px-4 sm:px-6">
                 <AnimatePresence mode="wait">
-                    {!isFinished ? (
+                    {isSubscriptionFlow ? (
+                        <motion.div
+                            key="subscription-success"
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-center"
+                        >
+                            <div className="mb-6 sm:mb-8 flex justify-center">
+                                <div className="relative">
+                                    <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        className="bg-[#d4b96a] p-3 sm:p-4 rounded-full"
+                                    >
+                                        <CheckCircle2 className="w-8 h-8 sm:w-12 sm:h-12 text-[#09090b]" />
+                                    </motion.div>
+                                    <motion.div
+                                        animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                                        transition={{ repeat: Infinity, duration: 2 }}
+                                        className="absolute inset-0 border-2 border-[#d4b96a] rounded-full"
+                                    />
+                                </div>
+                            </div>
+
+                            <h2 className="font-display text-3xl sm:text-5xl font-light text-[#fafafa] mb-4 sm:mb-6 uppercase tracking-tight px-2">
+                                Bienvenue au{' '}
+                                <span className="italic text-[#d4b96a]">Cercle Cosmos</span>
+                            </h2>
+
+                            <div className="rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[rgba(212,185,106,0.05)] p-6 sm:p-8 mb-8 sm:mb-10 mx-auto">
+                                <Mail className="w-6 h-6 sm:w-8 sm:h-8 text-[#d4b96a] mx-auto mb-4" />
+                                <p className="text-[#fafafa] text-base sm:text-lg mb-2 font-medium">
+                                    Votre abonnement est actif !
+                                </p>
+                                <p className="text-[#a1a1aa] text-sm sm:text-base leading-relaxed">
+                                    Vous recevrez vos prévisions mensuelles et aurez accès au
+                                    portail client.
+                                </p>
+                            </div>
+
+                            <button
+                                onClick={() => (window.location.href = '/')}
+                                className="px-8 py-4 bg-[#d4b96a] text-[#09090b] font-medium text-sm tracking-wide rounded-full hover:bg-[#eaddaa] transition-all duration-300"
+                            >
+                                Retour à l'accueil
+                            </button>
+                        </motion.div>
+                    ) : !isFinished ? (
                         <motion.div
                             key="processing"
                             initial={{ opacity: 0, scale: 0.95 }}
