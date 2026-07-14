@@ -119,18 +119,24 @@ export default function PayementSuccessPage() {
         if (!order_id) return;
         setIsSubscribing(true);
         try {
-            const response = await fetch(`${BASE_USER_API}/api/v1/subscription/subscribe-from-order/${order_id}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
+            const response = await fetch(
+                `${BASE_USER_API}/api/v1/subscription/subscribe-from-order/${order_id}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                 },
-            });
+            );
 
             const result = await response.json();
             if (result.success && result.data?.checkout_url) {
                 window.location.href = result.data.checkout_url;
             } else {
-                console.error("Erreur lors de la création de la session d'abonnement :", result.message);
+                console.error(
+                    "Erreur lors de la création de la session d'abonnement :",
+                    result.message,
+                );
                 setIsSubscribing(false);
             }
         } catch (error) {
@@ -145,9 +151,38 @@ export default function PayementSuccessPage() {
 
         if (!order_id) return;
 
+        let hasResolved = false;
+        const finishFlow = () => {
+            if (hasResolved) return;
+            hasResolved = true;
+            setStep(5);
+            setIsFinished(true);
+            setStepStatus('');
+            localStorage.removeItem('currentStep');
+        };
+
         const session_id = searchParams.get('session_id') as string | null;
         const socketId = session_id || `ton-cosmos-${order_id}`;
         const socket = new WebSocket(`${WEB_SOCKET_BASE}/stripe/ws/${socketId}`);
+
+        const fallbackTimer = window.setTimeout(() => {
+            finishFlow();
+        }, 15000);
+
+        socket.onopen = () => {
+            console.info('WebSocket connecté pour l’avancement de la commande');
+        };
+
+        socket.onerror = () => {
+            console.warn('WebSocket indisponible, finalisation du suivi côté interface');
+            finishFlow();
+        };
+
+        socket.onclose = () => {
+            if (!hasResolved) {
+                finishFlow();
+            }
+        };
 
         socket.onmessage = (event) => {
             try {
@@ -162,8 +197,7 @@ export default function PayementSuccessPage() {
                     localStorage.setItem('currentStep', newStep.toString());
 
                     if (newStep === 5) {
-                        setIsFinished(true);
-                        localStorage.removeItem('currentStep');
+                        finishFlow();
                     }
                 }
             } catch (error) {
@@ -172,9 +206,10 @@ export default function PayementSuccessPage() {
         };
 
         return () => {
+            window.clearTimeout(fallbackTimer);
             socket.close();
         };
-    }, [order_id]);
+    }, [order_id, searchParams]);
 
     return (
         <main className="relative min-h-screen bg-[#09090b] text-[#fafafa] overflow-x-hidden">
@@ -229,15 +264,15 @@ export default function PayementSuccessPage() {
                                             step === 4 && stepStatus === 'generating_audio'
                                                 ? 'Création de la version Audio'
                                                 : step === 4 && stepStatus === 'generating_poster'
-                                                ? 'Création du Poster HD'
-                                                : 'Envoi de votre Destin'
+                                                  ? 'Création du Poster HD'
+                                                  : 'Envoi de votre Destin'
                                         }
                                         description={
                                             step === 4 && stepStatus === 'generating_audio'
                                                 ? 'Votre synthèse audio vocale est en cours de génération...'
                                                 : step === 4 && stepStatus === 'generating_poster'
-                                                ? 'Votre poster haute définition de la carte du ciel est en cours de création...'
-                                                : 'Votre rapport complet est finalisé et envoyé par email'
+                                                  ? 'Votre poster haute définition de la carte du ciel est en cours de création...'
+                                                  : 'Votre rapport complet est finalisé et envoyé par email'
                                         }
                                         status={step === 4 ? 'loading' : step > 4 ? 'done' : 'wait'}
                                     />
@@ -275,7 +310,8 @@ export default function PayementSuccessPage() {
                             </div>
 
                             <h2 className="font-display text-3xl sm:text-5xl font-light text-[#fafafa] mb-4 sm:mb-6 uppercase tracking-tight px-2">
-                                Votre Destin vous a été <span className="italic text-[#d4b96a]">Révélé</span>
+                                Votre Destin vous a été{' '}
+                                <span className="italic text-[#d4b96a]">Révélé</span>
                             </h2>
 
                             <div className="rounded-2xl border border-[rgba(255,255,255,0.1)] bg-[rgba(212,185,106,0.05)] p-6 sm:p-8 mb-8 sm:mb-10 mx-auto">
@@ -297,21 +333,28 @@ export default function PayementSuccessPage() {
                                         Offre Exclusive Post-Achat
                                     </div>
                                     <h3 className="font-display text-2xl sm:text-4xl text-[#fafafa] font-light mb-4">
-                                        Rejoignez le <span className="text-[#d4b96a] italic">Cercle Cosmos</span>
+                                        Rejoignez le{' '}
+                                        <span className="text-[#d4b96a] italic">Cercle Cosmos</span>
                                     </h3>
                                     <p className="text-zinc-400 text-sm sm:text-base mb-8 max-w-lg leading-relaxed">
-                                        Allez plus loin dans votre exploration. Recevez chaque mois vos prévisions détaillées, basées sur vos transits astrologiques actuels. 
-                                        Une boussole cosmique pour naviguer au quotidien.
+                                        Allez plus loin dans votre exploration. Recevez chaque mois
+                                        vos prévisions détaillées, basées sur vos transits
+                                        astrologiques actuels. Une boussole cosmique pour naviguer
+                                        au quotidien.
                                     </p>
-                                    
+
                                     <div className="flex flex-col sm:flex-row gap-4 mb-8">
                                         <div className="flex items-center gap-3">
                                             <CheckCircle2 className="w-5 h-5 text-[#d4b96a]" />
-                                            <span className="text-sm text-zinc-300">Prévisions mensuelles sur-mesure</span>
+                                            <span className="text-sm text-zinc-300">
+                                                Prévisions mensuelles sur-mesure
+                                            </span>
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <CheckCircle2 className="w-5 h-5 text-[#d4b96a]" />
-                                            <span className="text-sm text-zinc-300">Accès au portail client</span>
+                                            <span className="text-sm text-zinc-300">
+                                                Accès au portail client
+                                            </span>
                                         </div>
                                     </div>
 
@@ -322,7 +365,10 @@ export default function PayementSuccessPage() {
                                             className="w-full sm:w-auto px-8 py-4 bg-[#d4b96a] text-[#09090b] font-medium text-sm tracking-wide rounded-full hover:bg-[#eaddaa] transition-all duration-300 flex items-center justify-center gap-3 disabled:opacity-70"
                                         >
                                             {isSubscribing ? (
-                                                <><Loader2 className="w-4 h-4 animate-spin" /> Préparation...</>
+                                                <>
+                                                    <Loader2 className="w-4 h-4 animate-spin" />{' '}
+                                                    Préparation...
+                                                </>
                                             ) : (
                                                 <>M'abonner pour 19€/mois</>
                                             )}
